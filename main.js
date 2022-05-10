@@ -27,33 +27,6 @@ class Field {
         this.generateField();
     }
 
-    //generateField Method
-    generateField() {
-        for (let y = 0; y < row; y++) {
-            for (let x = 0; x < col; x++) {
-                const prob = Math.random();
-                const holePortion = Math.random() * .2; //keeping hole to fieldpatch ratio on 1:4 max
-                this.field[y][x] = prob > holePortion ? fieldPatch : hole; // got this from resource on how to fill an array
-            }
-        }
-
-        // Set character starting position as [0][0]
-        this.field[0][0] = playerPath;
-
-        //Set the hat location
-        const hatPosition = {
-            x: Math.floor(Math.random() * row), //randomized till row length
-            y: Math.floor(Math.random() * col) //randomized till height length
-        };
-
-        // Checkpoint for Hat start Location ! Player start position
-        while (hatPosition.x === 0 && hatPosition.y === 0) {
-            hatPosition.x = Math.floor(Math.random() * row);
-            hatPosition.y = Math.floor(Math.random() * col);
-        }
-        this.field[hatPosition.y][hatPosition.x] = hat;
-        return this.field;
-    }
 
   runGame() {
     //implement your Codes
@@ -81,6 +54,35 @@ class Field {
     }
   }
 
+  //generateField Method
+
+  generateField() {
+    for (let y = 0; y < row; y++) {
+        for (let x = 0; x < col; x++) {
+            const prob = Math.random();
+            const holePortion = Math.random() * .2; //keeping hole to fieldpatch ratio on 1:4 max
+            this.field[y][x] = prob > holePortion ? fieldPatch : hole; // got this from resource on how to fill an array
+        }
+    }
+
+    // Set character starting position as [0][0]
+    this.field[0][0] = playerPath;
+
+    //Set the hat location
+    const hatPosition = {
+        x: Math.floor(Math.random() * row), //randomized till row length
+        y: Math.floor(Math.random() * col) //randomized till height length
+    };
+
+    // Checkpoint for Hat start Location ! Player start position
+    while (hatPosition.x === 0 && hatPosition.y === 0) {
+        hatPosition.x = Math.floor(Math.random() * row);
+        hatPosition.y = Math.floor(Math.random() * col);
+    }
+    this.field[hatPosition.y][hatPosition.x] = hat;
+    return this.field;
+}
+
   print() {
     clear();
     const displayString = this.field.map(row => {
@@ -93,16 +95,16 @@ class Field {
     let answer = prompt("Which way? ").toUpperCase;
     switch (answer) {
       case "L":
-        this.field[this.locationX] -= 1;
+        this.locationX -= 1;
         break;
       case "R":
-        this.field[this.locationX] += 1;
+        this.locationX += 1;
         break;
       case "U":
-        this.field[this.locationY] -= 1;
+        this.locationY -= 1;
         break;
       case "D":
-        this.field[this.locationY] += 1;
+        this.locationY += 1;
         break;
       default:
         console.log("Enter L = left, R = right, U = up, D = Down");
@@ -138,8 +140,6 @@ class Field {
   // getplayer() {
   //     return this.field[this.locationY][this.locationX] === playerPath;
   // }
-
-    
 
 
 } //End of Field Class
