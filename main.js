@@ -1,150 +1,143 @@
-//import all requrioed modules
-
 const prompt = require('prompt-sync')({ sigint: true });
 const clear = require('clear-screen');
 
 
-//instantiating the variables
+const hat = '^';
+const hole = 'O';
+const fieldPatch = '░';
+const playerPatch = '*';
 
-const hat = "^";
-const hole = "O";
-const fieldPatch = "░";
-const playerPath = "*";
-const row = 10;
-const col = 10;
+let currentlyPlaying = true;
 
 class Field {
+    constructor(field) {
+        this._field = field;
+        this.y = 0;
+        this.x = 0;
+    }
+//Added a get method for field 
+    get field() {
+        return this._field;
+    }
 
-    field = [];
 
-    constructor() {
-        this.locationX = 0;
-        this.locationY = 0;
-    
-        for (let a = 0; a < col; a++) {
-            this.field[a] = [];
+    print() {
+      clear();
+        return this.field.map(row =>
+            row.join('')
+        ).join('\n');
+    }
+
+
+
+    static generateField(height, width, percentage) {
+
+        //Added a control ratio for hole to field patches
+        const fieldOrHole = (percentage) => {
+            if (percentage >= 0 && percentage <= 100) {
+              const randNumber = Math.random() * 100;
+              if (randNumber < percentage) {
+                return hole;
+              } else {
+                return fieldPatch;
+              }
+            } else {
+              console.log('Please give a number between 0 - 100');
+            }
         }
-        this.generateField();
+
+        //Function with new bare field without player nor hat
+        const baseField = () => {
+            function makeWidthArray() {
+                let widthArray = [];
+                for (let i=0; i < width; i++) {
+                    widthArray.push(fieldOrHole(percentage));
+                }
+                return widthArray;
+            }
+            let baseField = [];
+            for (let i=0; i < height; i++) {
+                baseField.push(makeWidthArray());
+            }
+            return baseField;
+        }
+
+        const playerPath = baseField();
+
+        // Checkpoint for Hat start Location ! Player start position
+        do {
+            playerPath[Math.floor(Math.random() * height)][Math.floor(Math.random() * width)] = hat;
+        }   while (playerPath[0][0] == hat);
+
+          //Set the hat location
+        playerPath[0][0] = playerPatch;
+
+        return playerPath;
     }
 
 
-  runGame() {
-    //implement your Codes
-    let playing = true;
-    while (playing) {
-      this.print();
-      this.askQuestion();
-      if (!(
-        this.locationY >= 0 && this.locationX >= 0 && this.locationY < this.field.length && this.locationX < this.field[0].length
-      )) {
-        console.log("Out of bounds - Game End!");
-        playing = false;
-        break;
-      } else if (this.field[this.locationY][this.locationX] === hole) {
-        console.log("Sorry, you fell down a hole!");
-        playing = false;
-        break;
-      } else if (this.field[this.locationY][this.locationX] === hat) {
-        console.log("Congrats, you found your hat!");
-        playing = false;
-        break;
-      }
-      // return the path taken so far 
-      this.field[this.locationY][this.locationX] = playerPath;
-    }
+    askQuestion() {
+      let answer = prompt('Which way?  \nEnter L = left, R = right, U = up, D = Down:  ');
+      switch(answer.toUpperCase()) {
+          case 'U':
+              this.y -= 1;
+              break;
+          case 'D':
+              this.y += 1;
+              break;
+          case 'L':
+              console.log('Moving left');
+              this.x -= 1;
+              break;
+          case 'R':
+              this.x += 1;
+              break;
+          default:
+              break;
+      }    
   }
 
-  //generateField Method
+  //Last run through to close game base on status of lose/win
+  closeGame() {
+      if (this.field[this.y] == undefined) {
+          console.log('You lose - Out of boundary');
+          return currentlyPlaying = false;            
+      }
+    
+      switch (this.field[this.y][this.x]) {
+          case hole:
+              console.log('Sorry, you fell down a hole!');
+              currentlyPlaying = false;
+              break;
+          case undefined:
+              console.log('Out of bounds - Game Over');
+              currentlyPlaying = false;
+              break;
+          case hat:
+              console.log('Congrats, you found your hat!');
+              currentlyPlaying = false;
+              break;
+          case fieldPatch:
+              console.log('Keep looking for the hat...');
+              this.field[this.y][this.x] = playerPatch;
+              break;
+          case playerPatch:
+              console.log('Oops, you are stuck.. *');
+              break;
+      }    
+  }
 
-  generateField() {
-    for (let y = 0; y < row; y++) {
-        for (let x = 0; x < col; x++) {
-            const prob = Math.random();
-            const holePortion = Math.random() * .2; //keeping hole to fieldpatch ratio on 1:4 max
-            this.field[y][x] = prob > holePortion ? fieldPatch : hole; // got this from resource on how to fill an array
-        }
-    }
-
-    // Set character starting position as [0][0]
-    this.field[0][0] = playerPath;
-
-    //Set the hat location
-    const hatPosition = {
-        x: Math.floor(Math.random() * row), //randomized till row length
-        y: Math.floor(Math.random() * col) //randomized till height length
-    };
-
-    // Checkpoint for Hat start Location ! Player start position
-    while (hatPosition.x === 0 && hatPosition.y === 0) {
-        hatPosition.x = Math.floor(Math.random() * row);
-        hatPosition.y = Math.floor(Math.random() * col);
-    }
-    this.field[hatPosition.y][hatPosition.x] = hat;
-    return this.field;
 }
 
-  print() {
-    clear();
-    const displayString = this.field.map(row => {
-      return row.join('');
-    }).join('\n');
-    console.log(displayString);
-  }
+const myField = new Field(Field.generateField(10,10,30));
 
-  askQuestion() {
-    let answer = prompt("Which way? ").toUpperCase;
-    switch (answer) {
-      case "L":
-        this.locationX -= 1;
-        break;
-      case "R":
-        this.locationX += 1;
-        break;
-      case "U":
-        this.locationY -= 1;
-        break;
-      case "D":
-        this.locationY += 1;
-        break;
-      default:
-        console.log("Enter L = left, R = right, U = up, D = Down");
-        this.askQuestion();
-        break;
+function runGame() {
+    while(currentlyPlaying) {
+        console.log(myField.print());
+        myField.askQuestion();
+        myField.closeGame();
     }
-  }
-         // HAD TO ABANDON MY IF ELSE CONDITIONAL TO CHECK FOR INPUT VALUE BECAUSE OF COVERAGE PROBLEM MY ELSE STATEMENT GIVES
+    console.log('Nice effort!');
+}
 
-        // if (answer == "L") {
-        //     this.locationX -= 1;
-        // } else if (answer == "R") {
-        //     this.locationX += 1;
-        // } else if (answer == "U") {
-        //     this.locationY -= 1;
-        // } else if (answer == "D") {
-        //     this.locationY += 1;;
-        // } else {
-        //     // console.log("You can only enter: \n L = for Left \n R = for Right \n D = for Down \n U = for Up");
-        //     // this.askQuestion(); //at first I can't get this to work until I realized I need to used "this" keyword
-        //     console.log("Which next");
-        // }
-  
-    //current positions for player, holes and hat
-
-  // getHole() {
-  //   return this.field[this.locationY][this.locationX] === hole;
-  // }
-
-  // getHat() {
-  //   return this.field[this.locationY][this.locationX] === hat;
-  // }
-  // getplayer() {
-  //     return this.field[this.locationY][this.locationX] === playerPath;
-  // }
-
-
-} //End of Field Class
-
-
-
-const myField = new Field();
-myField.runGame();
+runGame(); 
